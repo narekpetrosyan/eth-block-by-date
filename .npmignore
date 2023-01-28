@@ -1,0 +1,20 @@
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules
+
+# configs
+package-lock.json
+yarn.lock
+yarn-error.log
+tsconfig.js
+jestconfig.json
+.yarnrc
+.env
+
+# project files
+src
+.gitignore
+tslint.json
+.prettierrc
