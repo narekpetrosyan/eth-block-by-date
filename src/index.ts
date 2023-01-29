@@ -1,1 +1,1 @@
-export * from './Dater';
+export { default } from './BlockByDate';

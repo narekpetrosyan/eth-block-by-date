@@ -15,6 +15,7 @@ jestconfig.json
 
 # project files
 src
+__tests__
 .gitignore
 tslint.json
 .prettierrc
