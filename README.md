@@ -11,13 +11,13 @@ Works with [ethers.js](https://docs.ethers.io/)
 Use npm:
 
 ```
-npm i ethereum-block-by-date
+npm i eth-block-by-date
 ```
 
 Or yarn:
 
 ```
-yarn add ethereum-block-by-date
+yarn add eth-block-by-date
 ```
 
 ## Usage
@@ -56,7 +56,7 @@ let block = await blockByDate.getDate(
     false // Refresh boundaries, optional. Recheck the latest block before request. By default false.
 );
 
-/* Returns an object: {
+/* Returns: {
     date // searched date
     block // found block number
     timestamp // found block timestamp
@@ -64,7 +64,7 @@ let block = await blockByDate.getDate(
 
 let requests = blockByDate.requests;
 
-/* Returns a count of made requests */
+/* Returns count of made requests */
 ```
 
 Note: if the given date is before the first block date in the blockchain, the script will return 1 as block number. If the given date is in the future, the script will return the last block number in the blockchain.

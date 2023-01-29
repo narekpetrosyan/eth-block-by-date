@@ -18,60 +18,56 @@ interface IBlock {
 }
 
 export default class {
-  provider: EthersProviders.Provider;
-  checkedBlocks: Record<number | string, number[]>;
-  savedBlocks: Record<number | string, IBlock>;
-  latestBlock!: IBlock;
-  firstBlock!: IBlock;
-  blockTime!: number;
+  private provider: EthersProviders.Provider;
+  private blocksChecked: Record<number | string, number[]>;
+  private blocksSaved: Record<number | string, IBlock>;
+  private lastBlock!: IBlock;
+  private firstBlock!: IBlock;
+  private blockTimestamp!: number;
   requests: number;
 
   constructor(_provider: EthersProviders.Provider) {
     this.provider = _provider;
-    this.checkedBlocks = {};
-    this.savedBlocks = {};
+    this.blocksChecked = {};
+    this.blocksSaved = {};
     this.requests = 0;
   }
 
-  private async getBoundaries(): Promise<void> {
-    this.latestBlock = await this.getBlockWrapper('latest');
+  private async requestBounderies(): Promise<void> {
+    this.lastBlock = await this.getBlockWrapper('latest');
     this.firstBlock = await this.getBlockWrapper(1);
-    this.blockTime =
-      (parseInt(String(this.latestBlock.timestamp), 10) - parseInt(String(this.firstBlock.timestamp), 10)) /
-      (parseInt(String(this.latestBlock.number), 10) - 1);
+    this.blockTimestamp =
+      (parseInt(String(this.lastBlock.timestamp), 10) - parseInt(String(this.firstBlock.timestamp), 10)) /
+      (parseInt(String(this.lastBlock.number), 10) - 1);
   }
 
-  async getDate(date: string | Dayjs | Date, after = true, refresh = false): Promise<BlockResult> {
+  async getBlockByDate(date: string | Dayjs | Date, after = true, refresh = false): Promise<BlockResult> {
     const utcDate = !dayjs.isDayjs(date) ? dayjs(date).utc() : date;
 
-    if (
-      typeof this.firstBlock === 'undefined' ||
-      typeof this.latestBlock === 'undefined' ||
-      typeof this.blockTime === 'undefined' ||
-      refresh
-    )
-      await this.getBoundaries();
-    if (utcDate.isBefore(dayjs.unix(this.firstBlock.timestamp))) return this.returnWrapper(utcDate.format(), 1);
-    if (utcDate.isSameOrAfter(dayjs.unix(this.latestBlock.timestamp)))
-      return this.returnWrapper(utcDate.format(), this.latestBlock.number);
-    this.checkedBlocks[utcDate.unix()] = [];
+    if (this.firstBlock === undefined || this.lastBlock === undefined || this.blockTimestamp === undefined || refresh)
+      await this.requestBounderies();
+    if (utcDate.isBefore(dayjs.unix(this.firstBlock.timestamp))) return this.wrapReturn(utcDate.format(), 1);
+    if (utcDate.isSameOrAfter(dayjs.unix(this.lastBlock.timestamp)))
+      return this.wrapReturn(utcDate.format(), this.lastBlock.number);
+    this.blocksChecked[utcDate.unix()] = [];
     const predictedBlock = await this.getBlockWrapper(
-      Math.ceil(utcDate.diff(dayjs.unix(this.firstBlock.timestamp), 'seconds') / this.blockTime),
+      Math.ceil(utcDate.diff(dayjs.unix(this.firstBlock.timestamp), 'seconds') / this.blockTimestamp),
     );
-    return this.returnWrapper(utcDate.format(), await this.findBetter(utcDate, predictedBlock, after));
+    return this.wrapReturn(utcDate.format(), await this.findBetter(utcDate, predictedBlock, after));
   }
 
   private async findBetter(
     date: Dayjs,
     predictedBlock: IBlock,
     after: boolean,
-    blockTime = this.blockTime,
+    blockTime = this.blockTimestamp,
   ): Promise<number> {
-    if (await this.isBetterBlock(date, predictedBlock, after)) return predictedBlock.number;
+    const isBlockBetter = await this.checkBlock(date, predictedBlock, after);
+    if (isBlockBetter) return predictedBlock.number;
     const difference = date.diff(dayjs.unix(predictedBlock.timestamp), 'seconds');
     let skip = Math.ceil(difference / (blockTime === 0 ? 1 : blockTime));
     if (skip === 0) skip = difference < 0 ? -1 : 1;
-    const nextPredictedBlock = await this.getBlockWrapper(this.getNextBlock(date, predictedBlock.number, skip));
+    const nextPredictedBlock = await this.getBlockWrapper(this.requestNextBlock(date, predictedBlock.number, skip));
     blockTime = Math.abs(
       (parseInt(String(predictedBlock.timestamp), 10) - parseInt(String(nextPredictedBlock.timestamp), 10)) /
         (parseInt(String(predictedBlock.number), 10) - parseInt(String(nextPredictedBlock.number), 10)),
@@ -79,7 +75,7 @@ export default class {
     return this.findBetter(date, nextPredictedBlock, after, blockTime);
   }
 
-  private async isBetterBlock(date: Dayjs, predictedBlock: IBlock, after: boolean) {
+  private async checkBlock(date: Dayjs, predictedBlock: IBlock, after: boolean) {
     const blockTime = dayjs.unix(predictedBlock.timestamp);
     if (after) {
       if (blockTime.isBefore(date)) return false;
@@ -93,31 +89,31 @@ export default class {
     return false;
   }
 
-  private getNextBlock(date: Dayjs, currentBlock: number, skip: number): number {
+  private requestNextBlock(date: Dayjs, currentBlock: number, skip: number): number {
     let nextBlock = currentBlock + skip;
-    if (nextBlock > this.latestBlock.number) nextBlock = this.latestBlock.number;
-    if (this.checkedBlocks[date.unix()].includes(nextBlock))
-      return this.getNextBlock(date, currentBlock, skip < 0 ? --skip : ++skip);
-    this.checkedBlocks[date.unix()].push(nextBlock);
+    if (nextBlock > this.lastBlock.number) nextBlock = this.lastBlock.number;
+    if (this.blocksChecked[date.unix()].includes(nextBlock))
+      return this.requestNextBlock(date, currentBlock, skip < 0 ? --skip : ++skip);
+    this.blocksChecked[date.unix()].push(nextBlock);
     return nextBlock < 1 ? 1 : nextBlock;
   }
 
-  private returnWrapper(date: string, block: number): BlockResult {
+  private wrapReturn(date: string, block: number): BlockResult {
     return {
       date: dayjs(date).utc().toString(),
       block,
-      timestamp: this.savedBlocks[block].timestamp,
+      timestamp: this.blocksSaved[block].timestamp,
     };
   }
 
   private async getBlockWrapper(block: number | string): Promise<IBlock> {
-    if (this.savedBlocks[block]) return this.savedBlocks[block];
+    if (this.blocksSaved[block]) return this.blocksSaved[block];
     const { number: num, timestamp } = await this.provider.getBlock(block);
-    this.savedBlocks[num] = {
+    this.blocksSaved[num] = {
       timestamp,
       number: num,
     };
     this.requests++;
-    return this.savedBlocks[num];
+    return this.blocksSaved[num];
   }
 }
