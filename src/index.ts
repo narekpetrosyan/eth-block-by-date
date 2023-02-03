@@ -1,10 +1,12 @@
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import utc from 'dayjs/plugin/utc';
 import { providers as EthersProviders } from 'ethers';
 
 dayjs.extend(utc);
 dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 interface BlockResult {
   block: number;
@@ -54,6 +56,28 @@ export default class {
       Math.ceil(utcDate.diff(dayjs.unix(this.firstBlock.timestamp), 'seconds') / this.blockTimestamp),
     );
     return this.wrapReturn(utcDate.format(), await this.findBetter(utcDate, predictedBlock, after));
+  }
+
+  async getBlocksByPeriod(
+    duration: dayjs.ManipulateType,
+    startDate: string | Dayjs | Date,
+    endDate: string | Dayjs | Date,
+    every = 1,
+    after = true,
+    refresh = false,
+  ) {
+    const start = dayjs(startDate);
+    const end = dayjs(endDate);
+    const current = start;
+    const dates = [];
+    while (current.isSameOrBefore(end)) {
+      dates.push(current.format());
+      current.add(every, duration);
+    }
+    if (this.firstBlock === undefined || this.lastBlock === undefined || this.blockTimestamp === undefined || refresh) {
+      await this.requestBounderies();
+    }
+    return await Promise.all(dates.map((date) => this.getBlockByDate(date, after)));
   }
 
   private async findBetter(
