@@ -1,6 +1,6 @@
 {
   "name": "eth-block-by-date",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Get Ethereum block number by a given date.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
