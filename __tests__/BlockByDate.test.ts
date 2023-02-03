@@ -72,4 +72,15 @@ describe('Block By Date Ethers Tests', () => {
     let block = await blockByDate.getBlockByDate(dayjs('2015-07-30T11:28:03-04:00'));
     expect(block.block).toEqual(5);
   });
+
+  it('Should get first blocks of the months', async function () {
+    let expectedBlocks = await blockByDate.getFirstBlocksByPeriod(
+      '2023-01-01T08:00:00.000Z',
+      '2023-02-01T08:00:00.000Z',
+    );
+
+    let blockNumbers = expectedBlocks.map((block) => block.block);
+    let expected = [16310583, 16532636];
+    expect(expected).toStrictEqual(blockNumbers);
+  });
 });

@@ -58,26 +58,11 @@ export default class {
     return this.wrapReturn(utcDate.format(), await this.findBetter(utcDate, predictedBlock, after));
   }
 
-  async getBlocksByPeriod(
-    duration: dayjs.ManipulateType,
-    startDate: string | Dayjs | Date,
-    endDate: string | Dayjs | Date,
-    every = 1,
-    after = true,
-    refresh = false,
-  ) {
-    const start = dayjs(startDate);
-    const end = dayjs(endDate);
-    const current = start;
-    const dates = [];
-    while (current.isSameOrBefore(end)) {
-      dates.push(current.format());
-      current.add(every, duration);
-    }
-    if (this.firstBlock === undefined || this.lastBlock === undefined || this.blockTimestamp === undefined || refresh) {
+  async getFirstBlocksByPeriod(startDate: string | Dayjs | Date, endDate: string | Dayjs | Date, refresh = false) {
+    if (!this.firstBlock || !this.lastBlock || !this.blockTimestamp || refresh) {
       await this.requestBounderies();
     }
-    return await Promise.all(dates.map((date) => this.getBlockByDate(date, after)));
+    return await Promise.all([await this.getBlockByDate(dayjs(startDate)), await this.getBlockByDate(dayjs(endDate))]);
   }
 
   private async findBetter(
