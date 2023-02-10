@@ -13,64 +13,59 @@ describe('Block By Date Ethers Tests', () => {
   });
 
   it('Should get right block for a given string', async () => {
-    let block = await blockByDate.getBlockByDate('2016-07-20T13:20:40Z');
-    expect(block.block).toEqual(1920000);
+    let block = await blockByDate.getBlockByDate('2023-01-01T08:00:00.000Z');
+    expect(block.block).toEqual(16310583);
   });
 
-  it('Should return 1 as block number if given time is before first block time', async function () {
+  it('Should return 1 as block number if given date is before first block date', async function () {
     let block = await blockByDate.getBlockByDate(new Date('1961-04-06:07:00Z'));
     expect(block.block).toEqual(1);
   });
 
-  it('Should return last block number if given time is in the future', async function () {
+  it('Should return last block number if given date is in the future', async function () {
     let last = await provider.getBlockNumber();
     let block = await blockByDate.getBlockByDate(dayjs().add(100, 'years'), true, true);
     expect(block.block).toEqual(last);
   });
 
-  it('Should make less then 15 requests for 2015-09-03T08:47:03.168Z', async function () {
+  it('Should make less then 15 requests for 2021-01-01T00:00:03.168Z', async function () {
     blockByDate.requests = 0;
-    await blockByDate.getBlockByDate('2015-09-03T08:47:03.168Z');
+    await blockByDate.getBlockByDate('2021-01-01T00:00:03.168Z');
     expect(blockByDate.requests).toBeLessThan(15);
   });
 
-  it('Should make less then 15 requests for 2017-09-09T16:33:13.236Z', async function () {
+  it('Should make less then 15 requests for 2021-09-09T16:33:13.236Z', async function () {
     blockByDate.requests = 0;
-    await blockByDate.getBlockByDate('2017-09-09T16:33:13.236Z');
+    await blockByDate.getBlockByDate('2021-09-09T16:33:13.236Z');
     expect(blockByDate.requests).toBeLessThan(15);
   });
 
-  it('Should make less then 15 requests for 2017-09-22T13:52:59.961Z', async function () {
+  it('Should make less then 15 requests for 2022-01-01T00:00:59.961Z', async function () {
     blockByDate.requests = 0;
-    await blockByDate.getBlockByDate('2017-09-22T13:52:59.961Z');
+    await blockByDate.getBlockByDate('2022-01-01T00:00:59.961Z');
     expect(blockByDate.requests).toBeLessThan(15);
   });
 
-  it('Should make less then 16 requests for 2016-11-14T14:46:06.107Z', async function () {
+  it('Should make less then 15 requests for 2022-09-01T00:00:06.107Z', async function () {
     blockByDate.requests = 0;
-    await blockByDate.getBlockByDate('2016-11-14T14:46:06.107Z');
-    expect(blockByDate.requests).toBeLessThan(16);
-  });
-
-  it('Should make less then 15 requests for 2017-04-20T07:54:29.965Z', async function () {
-    blockByDate.requests = 0;
-    await blockByDate.getBlockByDate('2017-04-20T07:54:29.965Z');
+    await blockByDate.getBlockByDate('2022-09-01T00:00:06.107Z');
     expect(blockByDate.requests).toBeLessThan(15);
   });
 
-  it('Should return right timestamp for a given date', async function () {
-    let block = await blockByDate.getBlockByDate(dayjs('2015-07-30T11:28:01-04:00'));
-    expect(block.block).toEqual(5);
+  it('Should make less then 10 requests for 2023-01-01T00:00:29.965Z', async function () {
+    blockByDate.requests = 0;
+    await blockByDate.getBlockByDate('2023-01-01T00:00:29.965Z');
+    expect(blockByDate.requests).toBeLessThan(10);
   });
 
-  it('Should return right timestamp for a given date', async function () {
-    let block = await blockByDate.getBlockByDate(dayjs('2015-07-30T11:28:02-04:00'));
-    expect(block.block).toEqual(5);
+  it('Should return right timestamp for 2022-01-01T18:31:29.965Z', async function () {
+    let block = await blockByDate.getBlockByDate(dayjs('2022-01-01T18:31:29.965Z'));
+    expect(block.timestamp).toEqual(1641061893);
   });
 
-  it('Should return right timestamp for a given date', async function () {
-    let block = await blockByDate.getBlockByDate(dayjs('2015-07-30T11:28:03-04:00'));
-    expect(block.block).toEqual(5);
+  it('Should return right timestamp for 2023-01-01T23:45:29.965Z', async function () {
+    let block = await blockByDate.getBlockByDate(dayjs('2023-01-01T23:45:29.965Z'));
+    expect(block.timestamp).toEqual(1672616735);
   });
 
   it('Should get first blocks of the months', async function () {

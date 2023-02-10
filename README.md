@@ -22,9 +22,8 @@ yarn add eth-block-by-date
 
 ## Usage
 
-### With Ethers.js
-
 ```javascript
+// Javascript:
 const BlockByDate = require("eth-block-by-date")
 const { ethers } = require('ethers');
 
@@ -36,6 +35,7 @@ const blockByDate = new BlockByDate(
 ```
 
 ```typescript
+// Typescript:
 import BlockByDate from "eth-block-by-date"
 import { ethers } from 'ethers';
 
@@ -50,8 +50,8 @@ const blockByDate = new BlockByDate(
 
 ```typescript
 // Getting block by date:
-let block = await blockByDate.getDate(
-    '2016-07-20T13:20:40Z', // Date, required. Any valid dayjs value: string, Date() object, dayjs() object.
+const block = await blockByDate.getDate(
+    '2023-01-20T13:20:40Z', // Date, required. Any valid dayjs value: string, Date() object, dayjs() object.
     true, // Block after, optional. Search for the nearest block before or after the given date. By default true.
     false // Refresh boundaries, optional. Recheck the latest block before request. By default false.
 );
@@ -62,13 +62,28 @@ let block = await blockByDate.getDate(
     timestamp // found block timestamp
 } */
 
-let requests = blockByDate.requests;
+const requests = blockByDate.requests;
 
 /* Returns count of made requests */
+```
+
+```typescript
+// Getting 2 blocks by given dates:
+const blocks = await blockByDate.getFirstBlocksByPeriod(
+    '2023-01-01T08:00:00.000Z', // Date, required. Any valid dayjs value: string, Date() object, dayjs() object.
+    '2023-02-01T08:00:00.000Z', // Date, required. Any valid dayjs value: string, Date() object, dayjs() object.
+    false // Refresh boundaries, optional. Recheck the latest block before request. By default false.
+);
+
+/* Returns: Array<{
+    date // searched date
+    block // found block number
+    timestamp // found block timestamp
+}> */
 ```
 
 Note: if the given date is before the first block date in the blockchain, the script will return 1 as block number. If the given date is in the future, the script will return the last block number in the blockchain.
 
 ## Dayjs
 
-The package uses dayjs plugin to parse date.
+The package uses [dayjs](https://day.js.org/) plugin to parse date.
