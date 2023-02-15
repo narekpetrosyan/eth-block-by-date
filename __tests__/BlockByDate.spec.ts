@@ -1,4 +1,4 @@
-import BlockByDate from '../src';
+import { BlockByDate } from '../src';
 import { describe, expect, it } from 'vitest';
 import dayjs from 'dayjs';
 import { ethers } from 'ethers';
